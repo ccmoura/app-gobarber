@@ -1,6 +1,5 @@
 import React, {useRef, useCallback} from 'react';
 import {
-  Image,
   View,
   ScrollView,
   KeyboardAvoidingView,
@@ -8,8 +7,8 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
 import {Form} from '@unform/mobile';
+import Icon from 'react-native-vector-icons/Feather';
 import {FormHandles} from '@unform/core';
 import * as Yup from 'yup';
 import api from '../../services/api';
@@ -18,12 +17,12 @@ import getValidationErrors from '../../utils/GetValidationErrors';
 
 import {useNavigation} from '@react-navigation/native';
 
-import {Container, Title, BackToSignIn, BackToSignInText} from './styles';
+import { Container, Title, UserAvatarButton, UserAvatar, BackButton } from './styles';
 
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 
-import logoImg from '../../assets/logo.png';
+import { useAuth } from '../../hooks/auth';
 
 interface SignUpFormData {
   name: string;
@@ -31,11 +30,19 @@ interface SignUpFormData {
   password: string;
 }
 const SignUp: React.FC = () => {
+
+  const { user } = useAuth();
   const formRef = useRef<FormHandles>(null);
   const navigation = useNavigation();
 
   const emailInputRef = useRef<TextInput>(null);
+  const oldPasswordInputRef = useRef<TextInput>(null);
+  const confirmPasswordInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
+
+  const handleGoBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
 
   const handleSignUp = useCallback(
     async (data: SignUpFormData) => {
@@ -88,9 +95,15 @@ const SignUp: React.FC = () => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{flex: 1}}>
           <Container>
-            <Image source={logoImg} />
+            <BackButton onPress={}>
+              <Icon name="chevron-left" size={24} color="#999591"/>
+            </BackButton>
+
+            <UserAvatarButton onPress={handleGoBack}>
+              <UserAvatar source={{ uri: user.avatar_url }} />
+            </UserAvatarButton>
             <View>
-              <Title>Crie sua conta</Title>
+              <Title>Meu perfil</Title>
             </View>
             <Form ref={formRef} onSubmit={handleSignUp}>
               <Input
@@ -113,6 +126,19 @@ const SignUp: React.FC = () => {
                 placeholder="E-mail"
                 returnKeyType="next"
                 onSubmitEditing={() => {
+                  oldPasswordInputRef.current?.focus();
+                }}
+              />
+              <Input
+                ref={oldPasswordInputRef}
+                secureTextEntry
+                textContentType="newPassword"
+                name="old_password"
+                icon="lock"
+                returnKeyType="next"
+                placeholder="Senha atual"
+                containerStyle={{ marginTop: 16 }}
+                onSubmitEditing={() => {
                   passwordInputRef.current?.focus();
                 }}
               />
@@ -122,22 +148,31 @@ const SignUp: React.FC = () => {
                 textContentType="newPassword"
                 name="password"
                 icon="lock"
+                returnKeyType="next"
+                placeholder="Nova senha"
+                onSubmitEditing={() => {
+                  confirmPasswordInputRef.current?.focus();
+                }}
+              />
+              <Input
+                ref={confirmPasswordInputRef}
+                secureTextEntry
+                textContentType="newPassword"
+                name="password_confirmation"
+                icon="lock"
                 returnKeyType="send"
-                placeholder="Senha"
+                placeholder="Confirmar senha"
                 onSubmitEditing={() => formRef.current?.submitForm()}
               />
+
               <Button onPress={() => formRef.current?.submitForm()}>
-                Entrar
+                Confirmar mudanças
               </Button>
             </Form>
           </Container>
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <BackToSignIn onPress={() => navigation.goBack()}>
-        <Icon name="arrow-left" size={20} color="#fff" />
-        <BackToSignInText>Voltar para logon</BackToSignInText>
-      </BackToSignIn>
     </>
   );
 };
